@@ -6,10 +6,10 @@ import LandingScreen from './src/screens/LandingScreen';
 import RoleSelectionScreen from './src/screens/RoleSelectionScreen';
 
 // Workspace Track A: Content Creator Screens
-import BasicInfoScreen from './src/screens/BasicInfoScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import FaceVerifyScreen from './src/screens/FaceVerifyScreen';
-import CreatorDetailsScreen from './src/screens/CreatorDetailsScreen';
+import BasicInfoScreen from './src/screens/BasicInfoScreen'; // Username + Password Box
+import CreatorDetailsScreen from './src/screens/CreatorDetailsScreen'; // Profile parameters + Location
 import PromptsDashboardScreen from './src/screens/PromptsDashboardScreen';
 import SelectPromptScreen from './src/screens/SelectPromptScreen';
 import UploadVisualsScreen from './src/screens/UploadVisualsScreen';
@@ -26,54 +26,43 @@ import BrandPhotosScreen from './src/screens/BrandPhotosScreen';
 import BrandTargetPreviewScreen from './src/screens/BrandTargetPreviewScreen';
 
 export default function App() {
-  // Navigation State Machine Routing Track
   const [currentScreen, setCurrentScreen] = useState('landing');
-  
-  // Operational Role Context Mapping
   const [userRole, setUserRole] = useState(null);
-
-  // Separate Active Index Trackers to protect runtime integrity
   const [activeCreatorSlotIndex, setActiveCreatorSlotIndex] = useState(0);
   const [activeBrandSlotIndex, setActiveBrandSlotIndex] = useState(0);
 
-  // Synchronized Structure: Creator treats slots as sequence-wise Objects matching image_aff8c1.png
   const [creatorSlots, setCreatorSlots] = useState([
     { title: '', answer: '' },
     { title: '', answer: '' },
     { title: '', answer: '' }
   ]);
   
-  // Synchronized Structure: Brand treats slots as sequence-wise Objects matching image_aff8c1.png
   const [brandSlots, setBrandSlots] = useState([
     { title: '', answer: '' },
     { title: '', answer: '' },
     { title: '', answer: '' }
   ]);
 
-  // Handler for Track A (Creator Objects)
   const updateCreatorSlot = (index, dataObject) => {
     const updated = [...creatorSlots];
-    updated[index] = dataObject; // Expects { title, answer }
+    updated[index] = dataObject; 
     setCreatorSlots(updated);
   };
 
-  // Handler for Track B (Brand Objects: Title + Answer)
   const updateBrandSlot = (index, dataObject) => {
     const updated = [...brandSlots];
-    updated[index] = dataObject; // Expects { title, answer }
+    updated[index] = dataObject; 
     setBrandSlots(updated);
   };
 
-  // Safe State Navigator
   const navigateTo = (screenKey) => {
-    console.log(`Navigate → ${screenKey}`);
+    console.log(`Maps → ${screenKey}`);
     setCurrentScreen(screenKey);
   };
 
-  // Central Switch Matrix Engine
   const renderScreen = () => {
     switch (currentScreen) {
-      /* ==================== GATEWAY / PORTAL ROUTING ==================== */
+      /* ==================== GATEWAY ROUTING ==================== */
       case 'landing':
         return (
           <LandingScreen
@@ -91,21 +80,26 @@ export default function App() {
             }}
             onCreator={() => {
               setUserRole('creator');
-              navigateTo('basic-info');
+              navigateTo('auth'); // ⚡ Goes straight to OTP screen first
             }}
             onBack={() => navigateTo('landing')}
           />
         );
 
-      /* ==================== WORKSPACE TRACK A: CREATOR FLOW ==================== */
-      case 'basic-info':
-        return <BasicInfoScreen onNext={() => navigateTo('auth')} />;
+      /* ==================== WORKSPACE TRACK A: REWIRED CREATOR FLOW ==================== */
       case 'auth':
-        return <AuthScreen onNext={() => navigateTo('face-verify')} />;
+        return <AuthScreen onNext={() => navigateTo('face-verify')} onBack={() => navigateTo('role-selection')} />;
+      
       case 'face-verify':
-        return <FaceVerifyScreen onNext={() => navigateTo('creator-details')} />;
+        return <FaceVerifyScreen onNext={() => navigateTo('basic-info')} onBack={() => navigateTo('auth')} />;
+      
+      case 'basic-info':
+        // ⚡ Collects Username + Password post-verification
+        return <BasicInfoScreen onNext={() => navigateTo('creator-details')} onBack={() => navigateTo('face-verify')} />;
+      
       case 'creator-details':
-        return <CreatorDetailsScreen onNext={() => navigateTo('prompts-dashboard')} />;
+        // ⚡ Collects Profile Info + City/Location
+        return <CreatorDetailsScreen onNext={() => navigateTo('prompts-dashboard')} onBack={() => navigateTo('basic-info')} />;
       
       case 'prompts-dashboard':
         return (
@@ -126,7 +120,7 @@ export default function App() {
             slotIndex={activeCreatorSlotIndex}
             onUpdateSlot={(index, data) => {
               updateCreatorSlot(index, data);
-              navigateTo('prompts-dashboard'); // Auto-redirect back instantly on save
+              navigateTo('prompts-dashboard');
             }}
             onBack={() => navigateTo('prompts-dashboard')}
           />
@@ -139,37 +133,13 @@ export default function App() {
 
       /* ==================== WORKSPACE TRACK B: BRAND FLOW ==================== */
       case 'brand-name-reg':
-        return (
-          <BrandNameRegScreen
-            onNext={() => navigateTo('brand-gstin')}
-            onBack={() => navigateTo('role-selection')}
-          />
-        );
-
+        return <BrandNameRegScreen onNext={() => navigateTo('brand-gstin')} onBack={() => navigateTo('role-selection')} />;
       case 'brand-gstin':
-        return (
-          <BrandGstinScreen
-            onNext={() => navigateTo('brand-email-otp')}
-            onBack={() => navigateTo('brand-name-reg')}
-          />
-        );
-
+        return <BrandGstinScreen onNext={() => navigateTo('brand-email-otp')} onBack={() => navigateTo('brand-name-reg')} />;
       case 'brand-email-otp':
-        return (
-          <BrandEmailOtpScreen
-            onNext={() => navigateTo('brand-requirements')}
-            onBack={() => navigateTo('brand-gstin')}
-          />
-        );
-
+        return <BrandEmailOtpScreen onNext={() => navigateTo('brand-requirements')} onBack={() => navigateTo('brand-gstin')} />;
       case 'brand-requirements':
-        return (
-          <BrandRequirementsScreen
-            onNext={() => navigateTo('brand-slots')}
-            onBack={() => navigateTo('brand-email-otp')}
-          />
-        );
-
+        return <BrandRequirementsScreen onNext={() => navigateTo('brand-slots')} onBack={() => navigateTo('brand-email-otp')} />;
       case 'brand-slots':
         return (
           <BrandSlotsScreen
@@ -182,37 +152,26 @@ export default function App() {
             onBack={() => navigateTo('brand-requirements')}
           />
         );
-
       case 'brand-prompts-directory':
         return (
           <BrandPromptsDirectoryScreen
             slotIndex={activeBrandSlotIndex}
             onUpdateSlot={(index, data) => {
               updateBrandSlot(index, data);
-              navigateTo('brand-slots'); // Auto-redirect back instantly on save
+              navigateTo('brand-slots');
             }}
             onBack={() => navigateTo('brand-slots')}
           />
         );
-
       case 'brand-photos':
-        return (
-          <BrandPhotosScreen
-            onNext={() => navigateTo('brand-target-preview')}
-            onBack={() => navigateTo('brand-slots')}
-          />
-        );
-
+        return <BrandPhotosScreen onNext={() => navigateTo('brand-target-preview')} onBack={() => navigateTo('brand-slots')} />;
       case 'brand-target-preview':
         return <BrandTargetPreviewScreen />;
 
-      /* ==================== FAILURE SAFEGUARD MATRIX ==================== */
       default:
         return (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>
-              System Error: View Node "{currentScreen}" Mismatch.
-            </Text>
+            <Text style={styles.errorText}>System Error: Node "{currentScreen}" Mismatch.</Text>
           </View>
         );
     }
